@@ -22,10 +22,12 @@
             display: flex; flex-direction: column; gap: 12px; transition: 0.3s;
         }
 
+        /* Исправлено: кнопка темы больше не перекрывает другие элементы */
+        .header-row { display: flex; align-items: center; gap: 10px; position: relative; }
         .theme-toggle {
-            position: absolute; top: 12px; right: 16px; background: var(--sec-bg);
-            border: 1px solid var(--card-border); border-radius: 50%; width: 40px; height: 40px;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100;
+            background: var(--sec-bg); border: 1px solid var(--card-border); 
+            border-radius: 50%; width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
         }
 
         .card { background: var(--sec-bg); border-radius: 16px; padding: 14px; border: 1px solid var(--card-border); }
@@ -57,26 +59,27 @@
         .preview-box { background: var(--sec-bg); border: 1px dashed var(--hint); border-radius: 12px; padding: 12px; font-family: monospace; font-size: 12px; white-space: pre-line; max-height: 0; opacity: 0; overflow: hidden; transition: 0.4s; }
         .preview-box.show { max-height: 500px; opacity: 1; margin-top: 10px; margin-bottom: 10px; border: 1px solid var(--accent); }
 
-        .advantage-item { text-align: center; flex: 1; }
-        .advantage-icon { font-size: 20px; }
-        .advantage-text { font-size: 9px; font-weight: 700; color: var(--hint); text-transform: uppercase; }
-        .disclaimer { font-size: 10px; color: var(--hint); text-align: center; margin-top: 4px; line-height: 1.4; }
-
-        .switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+        /* Исправлено: выравнивание тумблера и текста */
+        .switch-row { display: flex; justify-content: space-between; align-items: center; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--toggle-off); transition: .3s; border-radius: 22px; }
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent-green); }
         input:checked + .slider:before { transform: translateX(18px); }
+
+        .advantage-item { text-align: center; flex: 1; }
+        .advantage-icon { font-size: 20px; }
+        .advantage-text { font-size: 9px; font-weight: 700; color: var(--hint); text-transform: uppercase; }
+        .disclaimer { font-size: 10px; color: var(--hint); text-align: center; margin-top: 4px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-<div class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️</div>
-
-<div class="row">
+<div class="header-row">
     <div class="secondary-btn" onclick="tg.openTelegramLink('https://t.me/txtandpptx')">📢 Канал</div>
     <div class="secondary-btn" onclick="tg.openTelegramLink('https://t.me/OTZblBblawarem')">⭐ Отзывы</div>
+    <div class="theme-toggle" onclick="toggleTheme()" id="theme-btn">☀️</div>
 </div>
 
 <div class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px;">
@@ -130,13 +133,13 @@
     </div>
 </div>
 
-<div class="card" style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">
+<div class="card switch-row">
     <span style="font-size: 14px; font-weight: 700;">🚨 Срочный заказ</span>
     <label class="switch"><input type="checkbox" id="urgent" onchange="update()"><span class="slider"></span></label>
 </div>
 
 <div class="preview-box" id="preview"></div>
-<button class="main-btn" onclick="copy()">Скопировать анкету</button>
+<button class="main-btn" onclick="checkSubscriptionAndCopy()">Скопировать анкету</button>
 
 <div class="row">
     <button class="secondary-btn" style="color:var(--accent-red)" onclick="clearAll()">🗑 Очистить</button>
@@ -152,33 +155,17 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Плейсхолдер даты
+    // Плейсхолдер даты (сегодня)
     const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    document.getElementById('date').placeholder = `${day}.${month}`;
+    const todayStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById('date').placeholder = todayStr;
 
     function showTip(f) {
-        const tips = {
-            deadline: "Укажите дату (например, 20.02).",
-            details: "Тема, требования к шрифту или источникам."
-        };
-        tg.showAlert(tips[f]);
-    }
-
-    function checkNight() {
-        try {
-            const options = { timeZone: 'Asia/Yakutsk', hour: 'numeric', hour12: false };
-            const hourStr = new Intl.DateTimeFormat('ru-RU', options).format(new Date());
-            const h = parseInt(hourStr);
-            
-            if (!isNaN(h) && (h >= 23 || h < 7)) {
-                document.getElementById('status-text').innerText = "Статус: Сплю";
-                document.getElementById('status-text').style.color = "var(--hint)";
-                document.getElementById('status-dot').className = "status-dot";
-                document.getElementById('response-time').innerText = "Отвечу утром (ЯКТ)";
-            }
-        } catch (e) { console.error("Time check failed", e); }
+        if (f === 'deadline') {
+            tg.showAlert(`Укажите дату. Сегодня: ${todayStr}`);
+        } else {
+            tg.showAlert("Укажите тему и важные требования.");
+        }
     }
 
     function toggleTheme() {
@@ -192,64 +179,70 @@
     function update() {
         const type = document.getElementById('type').value,
               count = document.getElementById('count').value, 
-              date = document.getElementById('date').value || document.getElementById('date').placeholder,
+              date = document.getElementById('date').value || todayStr,
               price = document.getElementById('price').value, 
               det = document.getElementById('details').value || 'нет',
               urg = document.getElementById('urgent').checked;
 
         document.getElementById('unit-label').innerText = type.includes("През") ? "Кол-во слайдов" : "Кол-во страниц";
         
-        const canShow = count && price;
         const preview = document.getElementById('preview');
-        preview.classList.toggle('show', !!canShow);
+        if (count && price) {
+            preview.classList.add('show');
+            let h = urg ? '🚨 СРОЧНЫЙ ЗАКАЗ 🚨\n' : '';
+            preview.innerText = `${h}1. Вид: ${type}\n2. Кол-во: ${count}\n3. Дедлайн: ${date}\n4. Сумма: ${price} руб.\n5. Детали: ${det}\n---\n✅ Согласен на 100% предоплату.`;
+        } else {
+            preview.classList.remove('show');
+        }
+    }
 
-        let h = urg ? '🚨 СРОЧНЫЙ ЗАКАЗ 🚨\n' : '';
-        preview.innerText = `${h}1. Вид: ${type}\n2. Кол-во: ${count}\n3. Дедлайн: ${date}\n4. Сумма: ${price} руб.\n5. Детали: ${det}\n---\n✅ Согласен на 100% предоплату.`;
+    function checkSubscriptionAndCopy() {
+        tg.showConfirm("Вы подписаны на наш канал? (Обязательно для заказа)", (isSubscribed) => {
+            if (isSubscribed) {
+                copy();
+            } else {
+                tg.showPopup({
+                    title: "Требуется подписка",
+                    message: "Пожалуйста, подпишитесь на канал перед копированием анкеты.",
+                    buttons: [{type: 'default', text: 'Перейти в канал', id: 'go'}]
+                }, (btn) => {
+                    if (btn === 'go') tg.openTelegramLink('https://t.me/txtandpptx');
+                });
+            }
+        });
     }
 
     async function copy() {
         const c = document.getElementById('count'), p = document.getElementById('price');
         if (!c.value || !p.value) { 
-            tg.showAlert("Заполните количество и сумму!"); 
+            tg.showAlert("Сначала заполните все поля!"); 
             return; 
         }
         
         const text = document.getElementById('preview').innerText;
-        
         try {
-            // Современный метод копирования
             await navigator.clipboard.writeText(text);
             tg.HapticFeedback.notificationOccurred('success');
-            tg.showConfirm("Анкета скопирована! Перейти к @awarem?", (ok) => {
+            tg.showConfirm("Скопировано! Отправить @awarem?", (ok) => {
                 if (ok) tg.openTelegramLink("https://t.me/awarem");
             });
         } catch (err) {
-            // Фолбэк для старых WebView
-            const area = document.createElement("textarea");
-            area.value = text;
-            document.body.appendChild(area); 
-            area.select();
-            document.execCommand('copy'); 
-            document.body.removeChild(area);
-            tg.showAlert("Скопировано!");
+            tg.showAlert("Ошибка копирования. Попробуйте вручную.");
         }
     }
 
     function clearAll() {
-        if(confirm("Очистить все поля?")) {
+        if(confirm("Очистить анкету?")) {
             document.querySelectorAll('input, textarea').forEach(el => el.value = '');
             document.getElementById('urgent').checked = false; 
             update();
         }
     }
 
-    // Инициализация темы системы
     if (tg.colorScheme === 'dark') {
         document.body.setAttribute('data-theme', 'dark');
         document.getElementById('theme-btn').innerText = '🌙';
     }
-
-    checkNight(); 
     update();
 </script>
 </body>
