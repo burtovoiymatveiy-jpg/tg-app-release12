@@ -10,16 +10,32 @@
             --bg: #ffffff; --sec-bg: #f4f4f5; --text: #000000; --hint: #707579;
             --card-border: rgba(0,0,0,0.1); --accent: #3390ec; --accent-red: #ff3b30; --accent-green: #34c759;
             --toggle-off: #dee2e6;
+            --body-fill: #ffffff; /* Белый фон для светлой темы */
         }
         [data-theme="dark"] {
             --bg: #1c1c1d; --sec-bg: #2c2c2e; --text: #ffffff; --hint: #8e8e93; 
             --card-border: rgba(255,255,255,0.1); --toggle-off: #3a3a3c;
+            --body-fill: linear-gradient(-45deg, #080c14, #12121f, #1a1a2e, #080c14);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg); color: var(--text); margin: 0; padding: 16px;
+            color: var(--text); margin: 0; padding: 16px;
             display: flex; flex-direction: column; gap: 12px; transition: 0.3s;
+            min-height: 100vh;
+            background: var(--body-fill); /* Используем переменную */
+            background-size: 400% 400%;
+        }
+
+        /* Анимация работает только в темной теме */
+        [data-theme="dark"] body {
+            animation: gradient-animation 10s ease infinite;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         #skeleton { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; padding: 16px; box-sizing: border-box; }
@@ -42,9 +58,7 @@
             color: var(--text); font-size: 16px; padding: 10px; width: 100%; box-sizing: border-box; outline: none;
         }
 
-        .switch {
-            position: relative; display: inline-block; width: 40px; height: 22px; margin: 0;
-        }
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; margin: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
@@ -115,8 +129,8 @@
 </div>
 
 <div class="card" style="padding: 12px 14px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; min-height: 24px;">
-        <span style="font-size: 14px; font-weight: 700; line-height: 1;">🚨 Срочный заказ</span>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 14px; font-weight: 700;">🚨 Срочный заказ</span>
         <label class="switch" style="display: flex; align-items: center;">
             <input type="checkbox" id="urgent" onchange="update()">
             <span class="slider"></span>
@@ -134,14 +148,14 @@
 </div>
 
 <div class="stats-box">
-    <div style="font-size:11px; color:var(--hint); margin-bottom: 4px;">Все отзывы о проделанной работе здесь:</div>
+    <div style="font-size:11px; color:var(--hint); margin-bottom: 4px;">Все отзывы здесь:</div>
     <div style="font-size:13px; color:var(--accent); font-weight: 700; cursor:pointer;" onclick="tg.openTelegramLink('https://t.me/OTZblBblawarem')">t.me/OTZblBblawarem</div>
 </div>
 
 <div class="disclaimer">
     💳 <b>Предоплата 100%</b><br>
-    ⚠️ Ответственность за правки технического задания после начала работы не несу.<br>
-    ✅ Работа предназначена для мест <b>без проверки на антиплагиат</b>.
+    ⚠️ Ответственность за правки ТЗ после начала работы не несу.<br>
+    ✅ Места <b>без проверки на антиплагиат</b>.
 </div>
 
 <script>
@@ -223,7 +237,7 @@
     }
 
     function clearAll() {
-        if(confirm("Очистить?")) {
+        if(confirm("Очистить все поля?")) {
             document.querySelectorAll('input, textarea').forEach(el => el.value = '');
             document.getElementById('urgent').checked = false;
             update();
